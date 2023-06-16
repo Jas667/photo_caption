@@ -8,16 +8,17 @@ module.exports = {
   verifyToken(req, res, next) {
     const token = req.cookies.token;
     if (!token) {
-      return res.status(403).send({ message: 'No token provided' });
+      res.status(403).send({ message: 'No token provided' });
+    } else {
+      jwt.verify(token, config.jwtSecret, function (err, decoded) {
+        if (err) {
+          res.status(500).send({ message: 'Failed to authenticate token' });
+        }
+        req.userId = decoded.id;
+        req.username = decoded.username;
+        req.superUser = decoded.superUser;
+        next();
+      });
     }
-    jwt.verify(token, config.jwtSecret, function (err, decoded) {
-      if (err) {
-        return res.status(500).send({ message: 'Failed to authenticate token' });
-      }
-      req.userId = decoded.id;
-      req.username = decoded.username;
-      req.superUser = decoded.superUser;
-      next();
-    });
   }
 }

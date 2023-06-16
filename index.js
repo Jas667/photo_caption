@@ -11,6 +11,7 @@ const helmet = require('helmet');
 const cookieParser = require('cookie-parser');
 //require routers
 const userRouter = require('./routers/user_router');
+const photoRouter = require('./routers/photo_router');
 //require logger
 const logger = require('morgan');
 
@@ -34,6 +35,7 @@ app.use(cookieParser( {
 
 //routers
 app.use('/users', userRouter);
+app.use('/photos', photoRouter);
 
 app.get('/', (req, res) => {
       res.send('Hello World');

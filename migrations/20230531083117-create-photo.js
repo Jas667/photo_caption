@@ -13,7 +13,6 @@ module.exports = {
       user_username: {
         type: Sequelize.STRING,
         allowNull:false,
-        unique:true,
         references: { model: 'Users', key: 'username'},
         onUpdate: 'CASCADE',
         onDelete: 'NO ACTION'

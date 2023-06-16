@@ -16,17 +16,11 @@ module.exports = (sequelize, DataTypes) => {
       Photo.hasMany(models.Comment)
     }
 
-    //beforeCreate function to generate uuid
-    beforeCreate() {
-      this.id = uuid();
-    }
-
   }
   Photo.init({
     user_username: { 
       type:DataTypes.STRING, 
-      allowNull:false, 
-      unique:true 
+      allowNull:false 
     },
     title: { 
       type:DataTypes.STRING, 
@@ -36,6 +30,11 @@ module.exports = (sequelize, DataTypes) => {
         len: [1, 99]
       }
     },
+    photo_id: {
+      type:DataTypes.UUID,
+      allowNull:false,
+      unique:true
+    },
     url: { 
       type:DataTypes.STRING, 
       allowNull:false, 
@@ -43,7 +42,7 @@ module.exports = (sequelize, DataTypes) => {
       validate: {
         isUrl: true
       }
-    }
+    },
   }, {
     sequelize,
     modelName: 'Photo',

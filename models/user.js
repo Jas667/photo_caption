@@ -16,11 +16,6 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       User.hasMany(models.Comment)
     }
-    //beforeCreate function to generate uuid
-    beforeCreate() {
-      this.id = uuid();
-    }
-
   }
   User.init({
     firstName: { 

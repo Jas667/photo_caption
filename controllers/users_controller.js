@@ -8,7 +8,7 @@ const config = require('../config/config.js')[env];
 
 module.exports = {
     listUsers(req, res) {
-      return User
+      const user = User
             .findAll({ 
                   order: [
                         ['createdAt', 'DESC'],
@@ -17,9 +17,19 @@ module.exports = {
             .then((users) => { res.status(200).send(users) }) //send users if successful
             .catch((err) => { res.status(400).send(err) }); //catch any errors
       },
+      listOneUser(req, res) {
+            const user = User
+                  .findOne({
+                        where: {
+                              id: req.params.id
+                        }
+                  })//find one user
+                  .then((user) => { res.status(200).send(user) }) //send user if successful
+                  .catch((err) => { res.status(400).send(err) }); //catch any errors
+      },
 
      createUser(req, res) {
-      return User
+      const user = User
             .create({
                   id: uuidv4(),
                   username: req.body.username,
@@ -41,7 +51,7 @@ module.exports = {
             }) //find a user
             .then((user) => {
                   if (!user) {
-                        return res.status(404).send({ message: 'User Not Found' });
+                        res.status(404).send({ message: 'User Not Found' });
                   }
                   bcrypt.compare(req.body.password, user.password, function (err, result) {
                         if (result) {
@@ -60,9 +70,9 @@ module.exports = {
                                     sameSite: 'none',
                                     maxAge: 6 * 60 * 60 * 1000,
                               });
-                              return res.status(200).send({ message: 'Login Successful' });
+                              res.status(200).send({ message: 'Login Successful' });
                         } else {
-                              return res.status(401).send({ message: 'Login Failed' });
+                              res.status(401).send({ message: 'Login Failed' });
                         }
                   });
             }) //send user if successful
@@ -73,7 +83,6 @@ module.exports = {
             res.clearCookie('token');
             res.redirect('/');
             res.status(200).send();
-            return;
       },
       //allow user to delete their own profile. If superuser, allow deletion of any profile
       deleteUser(req, res) {
@@ -86,7 +95,7 @@ module.exports = {
               const user = User.destroy({
                 where: { username: userToDelete }
               });
-              return user
+              user
               .then(user => {
                 res.status(200).send({ message: `${userToDelete} deleted successfully` });
               })
@@ -94,11 +103,80 @@ module.exports = {
                 res.status(400).send(err);
               });
             } else {
-              return res.status(401).send({ message: 'You are not authorised to delete this user' });
+              res.status(401).send({ message: 'You are not authorised to delete this user' });
             }
           },
+      //allow user to update their own profile. If superuser, allow update of any profile
+      updateUser(req, res) {
+            const Userid = req.userId;
+            const superUser = req.superUser;
+            const userToUpdate = req.body.id;
+            const updates = Object.entries(req.body);
+            
+            //loop through updates and update the key/value pairs
+            // if superuser, update any user or if user is updating their own profile allow update
+            if (superUser || userToUpdate === Userid) {
+                  for (const [key, value] of updates) {
+                        if (key !== 'id' && key !== 'password') {
+                              const user = User.update({
+                                    [key]: value
+                              }, {
+                                    where: { id: userToUpdate }
+                              });
+                              user
+                                    .catch(err => {
+                                          res.status(400).send(err);
+                                    });
+                        }
+                  }
+                  res.status(200).send({ message: `${userToUpdate} updated successfully` });
+            } else {
+                  res.status(401).send({ message: 'You are not authorised to update this user' });
+            }
+
+      },
+      updateUserPassword(req, res) {
+            const userId = req.userId;
+            const superUser = req.superUser;
+            const userToUpdate = req.body.id;
+            const currentPassword = req.body.password;
+            const newPassword = req.body.newPassword;
+
+            // if superuser, update any user or if user is updating their own profile allow update
+            if (superUser || userToUpdate === userId) {
+                  const user = User.findOne({
+                        where: { id: userToUpdate }
+                  })
+                        .then((user) => {
+                              //check if current password is correct
+                              bcrypt.compare(currentPassword, user.password, function (err, result) {
+                                    if (result) {
+                                          //hash the new password
+                                          bcrypt.hash(newPassword, 10, function (err, hash) {
+                                                const user = User.update({
+                                                      password: hash
+                                                }, {
+                                                      where: { id: userToUpdate }
+                                                });
+                                                user
+                                                      .then(user => {
+                                                            res.status(200).send({ message: `${userToUpdate} updated successfully` });
+                                                      })
+                                                      .catch(err => {
+                                                            res.status(400).send(err);
+                                                      });
+                                          });
+                                    } else {
+                                          res.status(401).send({ message: 'Incorrect password provided' });
+                                    }
+                              });
+                        })
+            } else {
+                  res.status(401).send({ message: 'You are not authorised to update this users password' });
+            }
+      },
       //test authorisation middleware
       test(req, res) {
-            return res.status(200).send({ message: 'Authorised' });
+            res.status(200).send({ message: 'Authorised' });
       },
 };
