@@ -8,7 +8,7 @@ module.exports = {
   verifyToken(req, res, next) {
     const token = req.cookies.token;
     if (!token) {
-      res.status(403).send({ message: 'No token provided' });
+      res.status(403).send({ message: 'Please log in' });
     } else {
       jwt.verify(token, config.jwtSecret, function (err, decoded) {
         if (err) {
