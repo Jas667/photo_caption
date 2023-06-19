@@ -7,6 +7,8 @@ const auth = require('../middleware/auth.js');
 
 //define the routes
 router.get('/', photoController.listPhotos);
+router.get('/:id', photoController.listOnePhoto);
+
 router.post('/', auth.verifyToken, photoController.savePhoto);
 
 router.delete('/', auth.verifyToken, photoController.deletePhoto);

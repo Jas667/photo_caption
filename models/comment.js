@@ -13,8 +13,18 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Comment.belongsTo(models.User, { foreignKey: { name: 'username', allowNull: false } });
-      Comment.belongsTo(models.Photo, { foreignKey: { name: 'photo_id', allowNull: false } });
+      Comment.belongsTo(models.User, { 
+        foreignKey: { 
+          name: 'user_username', 
+          allowNull: false,
+          references: { model: 'Users', key: 'username' }
+      } });
+      Comment.belongsTo(models.Photo, { 
+        foreignKey: { 
+          name: 'photo_id', 
+          allowNull: false,
+          references: { model: 'Photos', key: 'photo_id' }
+        } });
     }
 
     //beforeCreate function to generate uuid

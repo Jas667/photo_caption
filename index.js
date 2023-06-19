@@ -12,6 +12,7 @@ const cookieParser = require('cookie-parser');
 //require routers
 const userRouter = require('./routers/user_router');
 const photoRouter = require('./routers/photo_router');
+const commentRouter = require('./routers/comment_router');
 //require logger
 const logger = require('morgan');
 
@@ -36,6 +37,7 @@ app.use(cookieParser( {
 //routers
 app.use('/users', userRouter);
 app.use('/photos', photoRouter);
+app.use('/comments', commentRouter);
 
 app.get('/', (req, res) => {
       res.send('Hello World');

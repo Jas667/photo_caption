@@ -13,7 +13,13 @@ module.exports = (sequelize, DataTypes) => {
      * The `models/index` file will call this method automatically.
      */
     static associate(models) {
-      Photo.hasMany(models.Comment)
+      Photo.hasMany(models.Comment, {
+        foreignKey: {
+          name: 'photo_id',
+          allowNull: false,
+          references: { model: 'Comments', key: 'photo_id' }
+        }
+      })
     }
 
   }

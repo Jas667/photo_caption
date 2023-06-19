@@ -14,6 +14,16 @@ module.exports = {
                   .then((photos) => { res.status(200).send(photos) }) //send users if successful
                   .catch((err) => { res.status(400).send(err) }); //catch any errors
             },
+            listOnePhoto(req, res) {
+                  const photo = Photo
+                        .findOne({
+                              where: {
+                                    id: req.params.id
+                              }
+                        })//find one user
+                        .then((photo) => { res.status(200).send(photo) }) //send user if successful
+                        .catch((err) => { res.status(400).send(err) }); //catch any errors
+            },
       savePhoto(req, res) {
             const photo = Photo
                   .create({
