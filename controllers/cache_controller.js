@@ -3,9 +3,9 @@ const NodeCache = require("node-cache");
 
 //create a cache class 
 module.exports = class Cache {
-      constructor() {
+      constructor(ttlSeconds) {
             this.cache = new NodeCache({
-                  stdTTL: 60 * 60 * 1, //cache for one hour
+                  stdTTL: ttlSeconds,
                   checkperiod: ttlSeconds * 0.2,
                   useClones: false
             });
@@ -28,3 +28,6 @@ module.exports = class Cache {
             this.cache.flushAll();
       }
 }
+
+
+//I NEED TO CHECK IF CACHE WORKS ON USERS ROUTE WHERE USER IS UPDATED AND DELETED

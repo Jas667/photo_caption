@@ -5,25 +5,30 @@ const jwt = require('jsonwebtoken'); //import jsonwebtoken
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/config.js')[env];
 
+//import and set cache
+const CacheService = require('./cache_controller');
+const cache = new CacheService(3600); // cache 1 hour
+const CACHE_KEY = 'users';
+
 
 module.exports = {
     listUsers(req, res) {
-      const user = User
+      cache.get(`${CACHE_KEY}_${req.params.id}`, () => User
             .findAll({ 
                   order: [
                         ['createdAt', 'DESC'],
                   ]
-            }) //find all users
+            })) //find all users
             .then((users) => { res.status(200).send(users) }) //send users if successful
             .catch((err) => { res.status(400).send(err) }); //catch any errors
       },
       listOneUser(req, res) {
-            const user = User
+            cache.get(`${CACHE_KEY}_${req.params.id}`, () => User
                   .findOne({
                         where: {
                               id: req.params.id
                         }
-                  })//find one user
+                  }))//find one user
                   .then((user) => { res.status(200).send(user) }) //send user if successful
                   .catch((err) => { res.status(400).send(err) }); //catch any errors
       },
@@ -95,7 +100,9 @@ module.exports = {
               const user = User.destroy({
                 where: { username: userToDelete }
               });
+              //delete cache
               user
+              .then(cache.del(`${CACHE_KEY}_${req.params.id}`))
               .then(user => {
                 res.status(200).send({ message: `${userToDelete} deleted successfully` });
               })
@@ -124,6 +131,8 @@ module.exports = {
                                     where: { id: userToUpdate }
                               });
                               user
+                                    //delete cache
+                                    .then(cache.del(`${CACHE_KEY}_${req.params.id}`))
                                     .catch(err => {
                                           res.status(400).send(err);
                                     });
@@ -159,6 +168,8 @@ module.exports = {
                                                       where: { id: userToUpdate }
                                                 });
                                                 user
+                                                      //delete cache
+                                                      .then(cache.del(`${CACHE_KEY}_${req.params.id}`))
                                                       .then(user => {
                                                             res.status(200).send({ message: `${userToUpdate} updated successfully` });
                                                       })

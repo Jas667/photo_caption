@@ -2,6 +2,10 @@ const Comment = require('../models').Comment; //import Photos model
 const uuidv4 = require('uuid-v4'); //import uuidv4
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/config.js')[env];
+//import and set cache
+const CacheService = require('./cache_controller');
+const cache = new CacheService(3600); // cache 1 hour
+const CACHE_KEY = 'comments';
 
 module.exports = {
       listComments(req, res) {
@@ -15,12 +19,12 @@ module.exports = {
                         .catch((err) => { res.status(400).send(err) }); //catch any errors
       },
       listOneComment(req, res) {
-            const comment = Comment
+            cache.get(`${CACHE_KEY}_${req.params.id}`, () => Comment
                   .findOne({
                         where: {
                               id: req.params.id
                         }
-                  })//find one user
+                  }))//find one user
                   .then((comment) => { res.status(200).send(comment) }) //send user if successful
                   .catch((err) => { res.status(400).send(err) }); //catch any errors
       },
@@ -56,6 +60,8 @@ module.exports = {
                                           id: commentId
                                     },
                               })
+                              //delete cache
+                              .then(() => cache.del(`${CACHE_KEY}_${commentId}`))
                               .then(() => {
                                     res.status(200).send({ message: 'Comment deleted successfully' });
                               })
@@ -90,6 +96,8 @@ module.exports = {
                                           id: commentId
                                     }
                               })
+                              //delete cache
+                              .then(() => cache.del(`${CACHE_KEY}_${commentId}`))
                               .then(() => {
                                     res.status(200).send({ message: 'Comment updated successfully' });
                               })

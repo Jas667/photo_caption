@@ -3,6 +3,12 @@ const uuidv4 = require('uuid-v4'); //import uuidv4
 const env = process.env.NODE_ENV || 'development';
 const config = require('../config/config.js')[env];
 
+//import and set cache
+const CacheService = require('./cache_controller');
+const cache = new CacheService(3600); // cache 1 hour
+const CACHE_KEY = 'photos';
+
+
 module.exports = {
       listPhotos(req, res) {
             const photo = Photo
@@ -15,12 +21,12 @@ module.exports = {
                   .catch((err) => { res.status(400).send(err) }); //catch any errors
             },
             listOnePhoto(req, res) {
-                  const photo = Photo
+                  cache.get(`${CACHE_KEY}_${req.params.id}`, () => Photo
                         .findOne({
                               where: {
                                     id: req.params.id
                               }
-                        })//find one user
+                        }))//find one user
                         .then((photo) => { res.status(200).send(photo) }) //send user if successful
                         .catch((err) => { res.status(400).send(err) }); //catch any errors
             },
@@ -57,6 +63,8 @@ module.exports = {
                                           photo_id: photoId
                                     },
                               })
+                              //delete cache
+                              .then(() => { cache.del(`${CACHE_KEY}_${photoId}`) })
                               .then(() => {
                                     res.status(200).send({ message: 'Photo deleted successfully' });
                               });
@@ -93,6 +101,8 @@ module.exports = {
                                           photo_id: photoId
                                     }
                               })
+                              //delete cache
+                              .then(() => { cache.del(`${CACHE_KEY}_${photoId}`) })
                               .then(() => {
                                     res.status(200).send({ message: 'Photo updated successfully' });
                               });

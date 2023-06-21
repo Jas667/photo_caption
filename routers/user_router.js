@@ -6,7 +6,7 @@ const userController = require('../controllers/users_controller');
 const auth = require('../middleware/auth.js');
 
 //define the routes
-router.get('/:id', userController.listOneUser);
+router.get('/select/:id', userController.listOneUser);
 router.get('/all', userController.listUsers);
 router.get('/test', auth.verifyToken, userController.test);
 router.get('/logout', userController.logout);
