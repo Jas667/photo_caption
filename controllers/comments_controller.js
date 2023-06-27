@@ -40,7 +40,7 @@ module.exports = {
                   .catch((err) => { res.status(400).send(err) }); //catch any errors
       },
       deleteComment(req, res) {
-            const commentId = req.body.comment_id;
+            const commentId = req.params.comment_id;
             const superUser = req.superUser;
             const userUsername = req.username;
             

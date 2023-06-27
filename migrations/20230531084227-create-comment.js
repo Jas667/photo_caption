@@ -15,14 +15,14 @@ module.exports = {
         allowNull: false,
         references: { model: 'Photos', key: 'photo_id'},
         onUpdate: 'CASCADE',
-        onDelete: 'NO ACTION'
+        onDelete: 'CASCADE'
       },
       user_username: {
         type: Sequelize.STRING,
         allowNull: false,
         references: { model: 'Users', key: 'username'},
         onUpdate: 'CASCADE',
-        onDelete: 'NO ACTION'
+        onDelete: 'CASCADE'
       },
       comment: {
         type: Sequelize.STRING

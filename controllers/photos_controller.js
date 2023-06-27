@@ -43,7 +43,7 @@ module.exports = {
                   .catch((err) => { res.status(400).send(err) }); //catch any errors
       },
       deletePhoto(req, res) {
-            const photoId = req.body.photo_id;
+            const photoId = req.params.photo_id;
             const superUser = req.superUser;
             const userUsername = req.username;
 

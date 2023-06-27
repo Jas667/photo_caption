@@ -1,0 +1,983 @@
+openapi: 3.0.3
+info:
+  title: Photo_Caption Codecademy project from the back-end engineering course
+  version: 1.0.11
+  description: >-
+    Photo sharing application showcasing authentication, and authorisation.
+    Usage of express, node.js, postgres, sequelize
+paths:
+  /users/all:
+    summary: Get all users
+    description: Get all users from DB
+    get:
+      summary: GET all users
+      description: Retrieve all users from photo_caption DB
+      operationId: get_users
+      responses:
+        '200':
+          description: A json object of all users
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+              examples:
+                users:
+                  value: |-
+                    [
+                        {
+                            "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+                            "firstName": "John",
+                            "lastName": "Doe",
+                            "email": "john@doe.com",
+                            "password": "$2b$12$T3Ni9Htk/0QpoPfdAj3KT.5LWJNAe2rAaNYI1OT7ggf6BOjsskM0i",
+                            "superUser": false,
+                            "username": "Johndoe",
+                            "createdAt": "2023-06-14T15:37:05.474Z",
+                            "updatedAt": "2023-06-14T15:37:05.474Z"
+                        },
+                        {
+                            "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+                            "firstName": "Jane",
+                            "lastName": "Doe",
+                            "email": "jane@doe.com",
+                            "password": "$2b$12$T3Ni9Htk/0QpoPfdAj3KT.5LWJNAe2rAaNYI1OT7ggf6BOjsskM0i",
+                            "superUser": true,
+                            "username": "Janedoe",
+                            "createdAt": "2023-06-14T15:37:05.474Z",
+                            "updatedAt": "2023-06-14T15:37:05.474Z"
+                        }
+                    ]
+        '400':
+          description: 400 bad request. The request was invalid
+          content:
+            application/json:
+              examples:
+                users_error:
+                  value: |-
+                    {
+                      "status": 400,
+                      "error": "Bad Request",
+                      "message": "The request was invalid.",
+                      "errors": [
+                        {
+                          "code": "1001",
+                          "message": "The search query must be a string."
+                        }
+                      ]
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Users
+  /users/select/{id}:
+    summary: Get user selected by ID
+    description: Get user from photo_caption DB
+    get:
+      security:
+        - cookieAuth: []
+      summary: Gets a user using their unique id to find
+      description: Retrieve the user information from the DB
+      operationId: get_user
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the user to select
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A json object of selected user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/user'
+              examples:
+                user:
+                  value: |-
+                    {
+                        "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "email": "john@doe.com",
+                        "password": "$2b$12$T3Ni9Htk/0QpoPfdAj3KT.5LWJNAe2rAaNYI1OT7ggf6BOjsskM0i",
+                        "superUser": false,
+                        "username": "Johndoe",
+                        "createdAt": "2023-06-14T15:37:05.474Z",
+                        "updatedAt": "2023-06-14T15:37:05.474Z"
+                    }
+        '400':
+          description: 400 bad request. The request was invalid
+          content:
+            application/json:
+              examples:
+                bad_user_request:
+                  value: |-
+                    {
+                      "status": 400,
+                      "message": "Bad Request",
+                      "errors": [
+                        {
+                          "message": "An unexpected error occurred."
+                        }
+                      ]
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Users
+  /users/logout:
+    summary: Get request to log user out and clears cookie
+    description: Log user out and clear cookie, including JWT
+    get:
+      summary: Get request that logs user out
+      description: Get request that clears cookie and removes JWT
+      operationId: logout_user
+      responses:
+        '200':
+          description: a json object from redirect to homepage
+          content:
+            application/json:
+              examples:
+                logout:
+                  value: |-
+                    {
+                        "message": "Welcome to the Photo App API"
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Users
+  /users/:
+    summary: Post request to create new user
+    description: Create a new user in the DB
+    post:
+      summary: Post request to create a new user
+      description: >-
+        New user created and added into the photo_caption DB after hashing
+        password
+      operationId: user_create
+      requestBody:
+        description: A new user obeject
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/user'
+      responses:
+        '201':
+          description: string confirming user created
+          content:
+            application/json:
+              examples:
+                user_created:
+                  value: example created successfully
+        '400':
+          description: sample error response
+          content:
+            application/json:
+              examples:
+                err_response:
+                  value: |-
+                    {
+                      "message": "An error occurred while creating the user.",
+                      "errors": [
+                        "The username is already taken.",
+                        "The password must be at least 8 characters long.",
+                      ],
+                    }
+        default:
+          description: Default error sample response
+      tags:
+        - Users
+  /users/login:
+    summary: Post request to log in user
+    description: >-
+      Check for username match and password match. If successful, attach JWT for
+      future authorisation
+    post:
+      security:
+        - cookieAuth: []
+      summary: Post request to log user in. Cookie set in header including JWT for auth
+      description: >-
+        On successful compare of username and password, JWT is attached to
+        cookie for future auth
+      operationId: user_login
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                username:
+                  type: string
+                  default: test
+                password:
+                  type: string
+                  default: passpass
+      responses:
+        '200':
+          description: login success with matching username and password
+          content:
+            application/json:
+              examples:
+                login_success:
+                  value: '{ message: ''Login Successful'' }'
+        '400':
+          description: an error occured during login
+          content:
+            application/json:
+              examples:
+                login_fail_error:
+                  value: |2-
+                                        {
+                                          "status": 400,
+                                          "message": "Bad Request",
+                                          "errors": [
+                                            {
+                                              "message": "An unexpected error occurred."
+                                            }
+                                          ]
+                                        }
+        '401':
+          description: login failed due to incorrect password
+          content:
+            application/json:
+              examples:
+                login_failed:
+                  value: '{ message: ''Login Failed. Incorrect Password.'' }'
+        '404':
+          description: no matching username
+          content:
+            application/json:
+              examples:
+                no_username_match:
+                  value: '{ message: ''User Not Found'' }'
+      tags:
+        - Users
+  /users/update:
+    summary: Put request to update user
+    description: If user is updating own profile or is a superuser, they can update profile
+    put:
+      security:
+        - cookieAuth: []
+      summary: Put request to update user
+      description: >-
+        User can update own profile or any profile if they are a superUser. 
+        User ID taken from JWT in cookie.
+      operationId: update_user_profile
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userToUpdate:
+                  type: string
+                  format: uuid
+                username:
+                  type: string
+                  default: new
+                firstName:
+                  type: string
+                  default: newName
+                lastName:
+                  type: string
+                  default: newLastName
+                email:
+                  type: string
+                  format: email
+                  default: new@email.com
+                superUser:
+                  type: boolean
+                  default: false
+      responses:
+        '200':
+          description: profile updated successfully
+          content:
+            application/json:
+              examples:
+                successful update:
+                  value: '{ message: `USER updated successfully` }'
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                general_error:
+                  value: |-
+                    {
+                      "status": 400,
+                      "message": "Bad Request",
+                      "errors": [
+                                  {
+                                    "message": "An unexpected error occurred."
+                                  }
+                                    ]
+                                      }
+        '401':
+          description: not authorised to update user
+          content:
+            application/json:
+              examples:
+                unauthorised_to_update_user:
+                  value: '{ message: ''You are not authorised to update this user'' }'
+        default:
+          description: Default error sample response
+      tags:
+        - Users
+  /users/updatepassword:
+    summary: 'Put request to update password '
+    description: >-
+      User must be logged in. Must supply current password and new password. Can
+      update if superuser or updating own password
+    put:
+      security:
+        - cookieAuth: []
+      summary: Put request to update password
+      description: >-
+        User must be logged in. Must supply current password and new password.
+        Can update if superuser or updating own password. User ID to update
+        taken from JWT in cookie.
+      operationId: update_user_password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                newPassword:
+                  type: string
+                  default: thisNewPassword
+                currentPassword:
+                  type: string
+                  default: passpass
+      responses:
+        '200':
+          description: password update success
+          content:
+            application/json:
+              examples:
+                update_password_success:
+                  value: '{ message: `${userToUpdate} updated successfully` }'
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                general_error:
+                  value: |-
+                    {
+                      "status": 400,
+                      "message": "Bad Request",
+                      "errors": [
+                                  {
+                                    "message": "An unexpected error occurred."
+                                  }
+                                    ]
+                                      }
+        '401':
+          description: incorrect password provided
+          content:
+            application/json:
+              examples:
+                incorrect_password:
+                  value: '{ message: ''Incorrect password provided'' }'
+        default:
+          description: Default error sample response
+      tags:
+        - Users
+  /users/delete/{username}:
+    summary: Delete user if current user authorised to delete
+    description: >-
+      If user is deleting own profile, or if user is a superUser, they can
+      delete profile
+    delete:
+      security:
+        - cookieAuth: []
+      summary: >-
+        Delete request. User must be logged in. User can delete own profile, or
+        any profile if they are a superUser
+      description: Delete user profile
+      operationId: delete_user
+      parameters:
+        - in: path
+          name: username
+          description: The username of the user to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: delete ok
+          content:
+            application/json:
+              examples:
+                user_deleted:
+                  value: '{ message: `${userToDelete} deleted successfully` }'
+        '400':
+          description: error with request
+          content:
+            application/json:
+              examples:
+                general_error:
+                  value: bad connection error
+        '401':
+          description: not authorised
+          content:
+            application/json:
+              examples:
+                not_authorised:
+                  value: '{ message: ''You are not authorised to delete this user'' }'
+        default:
+          description: Default error sample response
+      tags:
+        - Users
+  /photos/:
+    summary: Get all photos
+    description: Get request to list all of the photos
+    get:
+      summary: Get request to retrieve photos
+      description: Get request
+      operationId: get_photos
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/photo'
+              examples:
+                get_photos:
+                  value: |-
+                    [
+                        {
+                            "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+                            "user_username": "Janedoe",
+                            "title": "Photo 2",
+                            "photo_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18",
+                            "url": "https://picsum.photos/200/400",
+                            "createdAt": "2023-06-14T15:37:05.487Z",
+                            "updatedAt": "2023-06-14T15:37:05.487Z"
+                        },
+                        {
+                            "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+                            "user_username": "Johndoe",
+                            "title": "newTitle!",
+                            "photo_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a19",
+                            "url": "newurl.com",
+                            "createdAt": "2023-06-14T15:37:05.487Z",
+                            "updatedAt": "2023-06-15T09:33:54.516Z"
+                        }
+                    ]
+        default:
+          description: Default error sample response
+      tags:
+        - Photos
+    post:
+      security:
+        - cookieAuth: []
+      summary: Post a new photo
+      description: User must be logged in an authorised
+      operationId: post_new_photo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title:
+                  type: string
+                  default: testPic
+                url:
+                  type: string
+                  format: url
+                  default: https://picsum.photos/200/300
+                user_username:
+                  type: string
+                  default: Johndoe
+                  x-foreign-key: users
+                  x-foreign-key-table: users
+                  x-foreign-key-column: username
+      responses:
+        '201':
+          description: added
+          content:
+            application/json:
+              examples:
+                photo_posted:
+                  value: '`${req.body.title} created successfully`)'
+        '400':
+          description: error
+          content:
+            application/json:
+              examples:
+                bad_gateway:
+                  value: bad gateway
+        default:
+          description: Default error sample response
+      tags:
+        - Photos
+    put:
+      security:
+        - cookieAuth: []
+      summary: Put request to edit photo
+      description: Edit photo if logged in and authorised
+      operationId: put_photo
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                photoId:
+                  type: string
+                  format: uuid
+                photoTitle:
+                  type: string
+                  default: new
+                photoUrl:
+                  type: string
+                  default: newName
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              examples:
+                updated_photo:
+                  value: '{ message: ''Photo updated successfully'' }'
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                bad_gateway:
+                  value: Bad Gateway
+        '403':
+          description: not authorised
+          content:
+            application/json:
+              examples:
+                not_authorised:
+                  value: '{ message: ''You are not authorized to update this photo'' }'
+        '404':
+          description: not found
+          content:
+            application/json:
+              examples:
+                not_found:
+                  value: '{ message: ''Photo Not Found'' }'
+        default:
+          description: Default error sample response
+      tags:
+        - Photos
+  /photos/{id}:
+    summary: Get one photo
+    description: Return information on selected photo
+    get:
+      summary: Get single photo
+      description: Find and return info for photo selected in req.params
+      operationId: get_photo
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/photo'
+              examples:
+                get_one_photo:
+                  value: |-
+                    {
+                        "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+                        "user_username": "Janedoe",
+                        "title": "Photo 2",
+                        "photo_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18",
+                        "url": "https://picsum.photos/200/400",
+                        "createdAt": "2023-06-14T15:37:05.487Z",
+                        "updatedAt": "2023-06-14T15:37:05.487Z"
+                    }
+        '400':
+          description: bad request
+          content:
+            application/json:
+              examples:
+                general_error:
+                  value: bad request
+        default:
+          description: Default error sample response
+      tags:
+        - Photos
+  /comments/:
+    summary: Comment routes
+    description: Route for working with comments
+    get:
+      summary: Get all comments
+      description: Return an object containing comments
+      operationId: get_comments
+      responses:
+        '200':
+          description: get comments
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/comment'
+              examples:
+                get_comments:
+                  value: |-
+                    [
+                        {
+                            "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+                            "photo_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18",
+                            "user_username": "Janedoe",
+                            "comment": "This is another comment",
+                            "createdAt": "2023-06-14T15:37:05.496Z",
+                            "updatedAt": "2023-06-14T15:37:05.496Z"
+                        },
+                        {
+                            "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+                            "photo_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a19",
+                            "user_username": "Johndoe",
+                            "comment": "Update this comment",
+                            "createdAt": "2023-06-14T15:37:05.496Z",
+                            "updatedAt": "2023-06-19T09:55:06.130Z"
+                        }
+                    ]
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                bad_gateway:
+                  value: Bad Gateway
+        default:
+          description: Default error sample response
+      tags:
+        - Comments
+    post:
+      summary: Post a new comment
+      description: Create a new comment. User must be logged in
+      operationId: create_comment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                photo_id:
+                  type: string
+                  format: uuid
+                  x-foreign-key: photos
+                  x-foreign-key-table: photos
+                  x-foreign-key-column: photo_id
+                comment:
+                  type: string
+                  default: This is a new comment
+                user_username:
+                  type: string
+                  default: Johndoe
+                  x-foreign-key: users
+                  x-foreign-key-table: users
+                  x-foreign-key-column: username
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              examples:
+                comment_created:
+                  value: '`Comment added: ${req.body.comment}`'
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                bad_gateway:
+                  value: Bad Gateway
+        default:
+          description: Default error sample response
+      tags:
+        - Comments
+    put:
+      security:
+        - cookieAuth: []
+      summary: Put comment
+      description: User must be logged in and authorised to update comment
+      operationId: update_comment
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                comment_id:
+                  type: string
+                  format: uuid
+                comment:
+                  type: string
+                  default: new comment added
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              examples:
+                update_success:
+                  value: '{ message: ''Comment updated successfully'' }'
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                bad_gateway:
+                  value: Bad Gateway
+        '403':
+          description: not authorised
+          content:
+            application/json:
+              examples:
+                not_authorised:
+                  value: '{ message: ''You are not authorized to edit this comment'' }'
+        '404':
+          description: not found
+          content:
+            application/json:
+              examples:
+                not_found:
+                  value: '{ message: ''Comment Not Found'' }'
+        default:
+          description: Default error sample response
+      tags:
+        - Comments
+  /comments/{id}:
+    summary: Get single comment
+    description: Get single comment using id identifier in req.params
+    get:
+      security:
+        - cookieAuth: []
+      summary: Get request to retrieve a single comment
+      description: Id inserted into req.params for identification
+      operationId: get_one_comment
+      parameters:
+        - in: path
+          name: id
+          description: The ID of the user to select
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/comment'
+              examples:
+                get_comment:
+                  value: |-
+                    {
+                        "id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a12",
+                        "photo_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a18",
+                        "user_username": "Janedoe",
+                        "comment": "This is another comment",
+                        "createdAt": "2023-06-14T15:37:05.496Z",
+                        "updatedAt": "2023-06-14T15:37:05.496Z"
+                    }
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                bad_gateway:
+                  value: Bad Gateway
+        default:
+          description: Default error sample response
+      tags:
+        - Comments
+  /photos/delete/{photo_id}:
+    summary: Delete selected photo
+    description: >-
+      User must be logged in. User can delete their own comment, or any comment
+      if they are a superUser
+    delete:
+      summary: Delete photo
+      description: Delete selected photo
+      operationId: photo_delete
+      parameters:
+        - in: path
+          name: photo_id
+          description: photoId of photo to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              examples:
+                photo_deleted:
+                  value: '{ message: ''Photo deleted successfully'' }'
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                bad_gateway:
+                  value: Bad Gateway
+        '403':
+          description: not authorised
+          content:
+            application/json:
+              examples:
+                not_authorised:
+                  value: '{ message: ''You are not authorized to delete this photo'' }'
+        '404':
+          description: not found
+          content:
+            application/json:
+              examples:
+                not_found:
+                  value: '{ message: ''Photo Not Found'' }'
+        default:
+          description: Default error sample response
+      tags:
+        - Photos
+  /comments/delete/{comment_id}:
+    summary: Delete comment
+    description: Authorised user can delete comment
+    delete:
+      summary: Delete comment
+      description: >-
+        User must be logged in. User can delete their own comment. SuperUser can
+        delete any comment.
+      operationId: delete_comment
+      parameters:
+        - in: path
+          name: comment_id
+          description: id of comment to delete
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              examples:
+                comment_deleted:
+                  value: '{ message: ''Comment deleted successfully'' }'
+        '400':
+          description: general error
+          content:
+            application/json:
+              examples:
+                Bad Gateway:
+                  value: Bad Gateway
+        '403':
+          description: not authorised
+          content:
+            application/json:
+              examples:
+                not_authorised:
+                  value: '{ message: ''You are not authorized to delete this comment'' }'
+        '404':
+          description: not found
+          content:
+            application/json:
+              examples:
+                not_found:
+                  value: '{ message: ''Comment Not Found'' }'
+        default:
+          description: Default error sample response
+      tags:
+        - Comments
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: token
+  schemas:
+    user:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        superUser:
+          type: boolean
+        username:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    photo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        user_username:
+          type: string
+          x-foreign-key: users
+          x-foreign-key-table: users
+          x-foreign-key-column: username
+        title:
+          type: string
+        photo_id:
+          type: string
+        url:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+    comment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        photo_id:
+          type: string
+          format: uuid
+          x-foreign-key: photos
+          x-foreign-key-table: photos
+          x-foreign-key-column: photo_id
+        user_username:
+          type: string
+          x-foreign-key: users
+          x-foreign-key-table: users
+          x-foreign-key-column: username
+        comment:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+servers:
+  - url: http://localhost:3000
+    variables: {}
+    description: Localhost server

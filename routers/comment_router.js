@@ -7,13 +7,13 @@ const auth = require('../middleware/auth');
 
 //define the routes
 router.get('/', commentController.listComments);
-router.get('/:id', commentController.listOneComment);
+router.get('/:id', auth.verifyToken, commentController.listOneComment);
 
 router.post('/', auth.verifyToken, commentController.createComment);
 
 router.put('/', auth.verifyToken, commentController.editComment);
 
-router.delete('/', auth.verifyToken, commentController.deleteComment);
+router.delete('/delete/:comment_id', auth.verifyToken, commentController.deleteComment);
 
 
 //export the router

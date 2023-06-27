@@ -40,7 +40,7 @@ app.use('/photos', photoRouter);
 app.use('/comments', commentRouter);
 
 app.get('/', (req, res) => {
-      res.send('Hello World');
+      res.send({ message: 'Welcome to the Photo App API' });
 });
 
 

@@ -77,7 +77,7 @@ module.exports = {
                               });
                               res.status(200).send({ message: 'Login Successful' });
                         } else {
-                              res.status(401).send({ message: 'Login Failed' });
+                              res.status(401).send({ message: 'Login Failed. Incorrect Password.' });
                         }
                   });
             }) //send user if successful
@@ -86,14 +86,13 @@ module.exports = {
      //logout
       logout(req, res) {
             res.clearCookie('token');
-            res.redirect('/');
-            res.status(200).send();
+            res.status(200).redirect('/');
       },
       //allow user to delete their own profile. If superuser, allow deletion of any profile
       deleteUser(req, res) {
             const username = req.username;
             const superUser = req.superUser;
-            const userToDelete = req.body.username;
+            const userToDelete = req.params.username;
           
             // if superuser, delete any user
             if (superUser || userToDelete === username) {

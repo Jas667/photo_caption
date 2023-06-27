@@ -11,7 +11,7 @@ router.get('/:id', photoController.listOnePhoto);
 
 router.post('/', auth.verifyToken, photoController.savePhoto);
 
-router.delete('/', auth.verifyToken, photoController.deletePhoto);
+router.delete('/delete/:photo_id', auth.verifyToken, photoController.deletePhoto);
 
 router.put('/', auth.verifyToken, photoController.updatePhoto);
 
